@@ -1,0 +1,171 @@
+Bước 5: Cấu hình kết nối SQL Server
+➤ File: appsettings.json
+Thêm dòng sau:
+
+json
+Copy
+Edit
+"ConnectionStrings": {
+  "DefaultConnection": "Server=localhost;Database=ProductDb;Trusted_Connection=True;MultipleActiveResultSets=true"
+}
+🔁 Nếu dùng SQL Express: "Server=localhost\\SQLEXPRESS;"
+
+🧩 Bước 6: Cập nhật Program.cs
+csharp
+Copy
+Edit
+using Microsoft.EntityFrameworkCore;
+using ProductApi.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Add EF Core with SQL Server
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var app = builder.Build();
+
+// Tự tạo DB nếu chưa có
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.EnsureCreated(); // hoặc dùng EF migrations
+}
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.Run();
+🧪 Bước 7: Tạo Controller API
+➤ File: Controllers/ProductsController.cs
+csharp
+Copy
+Edit
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ProductApi.Data;
+using ProductApi.Models;
+
+namespace ProductApi.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class ProductsController : ControllerBase
+{
+    private readonly AppDbContext _context;
+
+    public ProductsController(AppDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll() =>
+        Ok(await _context.Products.ToListAsync());
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> Get(int id)
+    {
+        var product = await _context.Products.FindAsync(id);
+        return product == null ? NotFound() : Ok(product);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] Product product)
+    {
+        _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+        return CreatedAtAction(nameof(Get), new { id = product.Id }, product);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, [FromBody] Product updated)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null) return NotFound();
+
+        product.Name = updated.Name;
+        product.Price = updated.Price;
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null) return NotFound();
+
+        _context.Products.Remove(product);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+    [HttpGet("search")]
+    public async Task<IActionResult> Search([FromQuery] string keyword)
+    {
+        var results = await _context.Products
+            .Where(p => p.Name.Contains(keyword))
+            .ToListAsync();
+
+        return Ok(results);
+    }
+}
+▶️ Bước 8: Chạy ứng dụng
+bash
+Copy
+Edit
+dotnet run
+Mở trình duyệt đến:
+
+bash
+Copy
+Edit
+https://localhost:{port}/swagger
+Dùng Swagger UI để test tất cả các API endpoints
+
+📌 Bổ sung: Dùng Entity Framework Migrations (khuyên dùng)
+bash
+Copy
+Edit
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+✅ Kết quả
+Bạn đã có một API có thể:
+
+GET /api/products – lấy danh sách
+
+GET /api/products/{id} – lấy 1 sản phẩm
+
+POST /api/products – tạo mới
+
+PUT /api/products/{id} – cập nhật
+
+DELETE /api/products/{id} – xoá
+
+GET /api/products/search?keyword=abc – tìm kiếm theo tên
+
+Nếu bạn muốn mình bổ sung thêm:
+
+Upload hình ảnh sản phẩm
+
+Thêm phân trang / sắp xếp
+
+Thêm authentication (JWT)
+
+Kết nối frontend
+
+=> Mình có thể hỗ trợ chi tiết nữa nhé! Bạn muốn mở rộng gì tiếp?
