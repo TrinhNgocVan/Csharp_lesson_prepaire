@@ -9,3 +9,11 @@ services:
     ports:
       - "1433:1433"
     restart: always
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus_t2311e
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    restart: always      
