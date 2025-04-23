@@ -44,17 +44,6 @@ public class ProductController : ControllerBase
         .ToListAsync());
     }
 
-    [HttpGet("{producerId}")]
-    public async Task<IActionResult> getProductByProducerId(int producerId)
-    {
-        return Ok(
-            await _context.Products
-            .Where(p => p.Id == producerId)
-            .ToListAsync()
-        );
-    }
-
-
     [HttpGet("{id}")]
     public async Task<IActionResult> getById(int id)
     {

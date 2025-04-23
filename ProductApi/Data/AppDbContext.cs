@@ -11,6 +11,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Producer> Producers => Set<Producer>();
 
+    public DbSet<Inventory> Inventories => Set<Inventory>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder){
         modelBuilder.Entity<Product>()
         .HasOne(p => p.Producer)

@@ -35,5 +35,10 @@ public class ProducerController : ControllerBase{
         return Ok("Create producer success");
     }
 
+    // todo : api lay product by  producer
+    
+
+
+
 
 }
